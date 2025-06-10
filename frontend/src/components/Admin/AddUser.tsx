@@ -60,7 +60,7 @@ const AddUser = () => {
     mutationFn: (data: UserCreate) =>
       UsersService.createUser({ requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("User created successfully.")
+      showSuccessToast("用户创建成功。")
       reset()
       setIsOpen(false)
     },
@@ -76,6 +76,7 @@ const AddUser = () => {
     mutation.mutate(data)
   }
 
+
   return (
     <DialogRoot
       size={{ base: "xs", md: "md" }}
@@ -86,32 +87,32 @@ const AddUser = () => {
       <DialogTrigger asChild>
         <Button value="add-user" my={4}>
           <FaPlus fontSize="16px" />
-          Add User
+          添加用户
         </Button>
       </DialogTrigger>
       <DialogContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Add User</DialogTitle>
+            <DialogTitle>添加用户</DialogTitle>
           </DialogHeader>
           <DialogBody>
             <Text mb={4}>
-              Fill in the form below to add a new user to the system.
+              请填写下面的表单，将新用户添加到系统中。
             </Text>
             <VStack gap={4}>
               <Field
                 required
                 invalid={!!errors.email}
                 errorText={errors.email?.message}
-                label="Email"
+                label="邮箱"
               >
                 <Input
                   id="email"
                   {...register("email", {
-                    required: "Email is required",
+                    required: "邮箱不能为空",
                     pattern: emailPattern,
                   })}
-                  placeholder="Email"
+                  placeholder="请输入邮箱"
                   type="email"
                 />
               </Field>
@@ -119,12 +120,12 @@ const AddUser = () => {
               <Field
                 invalid={!!errors.full_name}
                 errorText={errors.full_name?.message}
-                label="Full Name"
+                label="姓名"
               >
                 <Input
                   id="name"
                   {...register("full_name")}
-                  placeholder="Full name"
+                  placeholder="请输入姓名"
                   type="text"
                 />
               </Field>
@@ -133,18 +134,18 @@ const AddUser = () => {
                 required
                 invalid={!!errors.password}
                 errorText={errors.password?.message}
-                label="Set Password"
+                label="设置密码"
               >
                 <Input
                   id="password"
                   {...register("password", {
-                    required: "Password is required",
+                    required: "密码不能为空",
                     minLength: {
                       value: 8,
-                      message: "Password must be at least 8 characters",
+                      message: "密码不能少于8位",
                     },
                   })}
-                  placeholder="Password"
+                  placeholder="请输入密码"
                   type="password"
                 />
               </Field>
@@ -153,17 +154,17 @@ const AddUser = () => {
                 required
                 invalid={!!errors.confirm_password}
                 errorText={errors.confirm_password?.message}
-                label="Confirm Password"
+                label="确认密码"
               >
                 <Input
                   id="confirm_password"
                   {...register("confirm_password", {
-                    required: "Please confirm your password",
+                    required: "请再次输入密码",
                     validate: (value) =>
                       value === getValues().password ||
-                      "The passwords do not match",
+                      "两次输入的密码不一致",
                   })}
-                  placeholder="Password"
+                  placeholder="请再次输入密码"
                   type="password"
                 />
               </Field>
@@ -179,7 +180,7 @@ const AddUser = () => {
                       checked={field.value}
                       onCheckedChange={({ checked }) => field.onChange(checked)}
                     >
-                      Is superuser?
+                      超级管理员
                     </Checkbox>
                   </Field>
                 )}
@@ -193,7 +194,7 @@ const AddUser = () => {
                       checked={field.value}
                       onCheckedChange={({ checked }) => field.onChange(checked)}
                     >
-                      Is active?
+                      启用
                     </Checkbox>
                   </Field>
                 )}
@@ -208,7 +209,7 @@ const AddUser = () => {
                 colorPalette="gray"
                 disabled={isSubmitting}
               >
-                Cancel
+                取消
               </Button>
             </DialogActionTrigger>
             <Button
@@ -217,7 +218,7 @@ const AddUser = () => {
               disabled={!isValid}
               loading={isSubmitting}
             >
-              Save
+              保存
             </Button>
           </DialogFooter>
         </form>

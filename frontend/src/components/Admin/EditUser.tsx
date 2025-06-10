@@ -58,7 +58,7 @@ const EditUser = ({ user }: EditUserProps) => {
     mutationFn: (data: UserUpdateForm) =>
       UsersService.updateUser({ userId: user.id, requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("User updated successfully.")
+      showSuccessToast("用户更新成功。")
       reset()
       setIsOpen(false)
     },
@@ -93,24 +93,24 @@ const EditUser = ({ user }: EditUserProps) => {
       <DialogContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
+            <DialogTitle>编辑用户</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            <Text mb={4}>Update the user details below.</Text>
+            <Text mb={4}>请在下方更新用户信息。</Text>
             <VStack gap={4}>
               <Field
                 required
                 invalid={!!errors.email}
                 errorText={errors.email?.message}
-                label="Email"
+                label="邮箱"
               >
                 <Input
                   id="email"
                   {...register("email", {
-                    required: "Email is required",
+                    required: "邮箱不能为空",
                     pattern: emailPattern,
                   })}
-                  placeholder="Email"
+                  placeholder="请输入邮箱"
                   type="email"
                 />
               </Field>
@@ -118,12 +118,12 @@ const EditUser = ({ user }: EditUserProps) => {
               <Field
                 invalid={!!errors.full_name}
                 errorText={errors.full_name?.message}
-                label="Full Name"
+                label="姓名"
               >
                 <Input
                   id="name"
                   {...register("full_name")}
-                  placeholder="Full name"
+                  placeholder="请输入姓名"
                   type="text"
                 />
               </Field>
@@ -131,17 +131,17 @@ const EditUser = ({ user }: EditUserProps) => {
               <Field
                 invalid={!!errors.password}
                 errorText={errors.password?.message}
-                label="Set Password"
+                label="设置密码"
               >
                 <Input
                   id="password"
                   {...register("password", {
                     minLength: {
                       value: 8,
-                      message: "Password must be at least 8 characters",
+                      message: "密码不能少于8位",
                     },
                   })}
-                  placeholder="Password"
+                  placeholder="请输入密码"
                   type="password"
                 />
               </Field>
@@ -149,16 +149,16 @@ const EditUser = ({ user }: EditUserProps) => {
               <Field
                 invalid={!!errors.confirm_password}
                 errorText={errors.confirm_password?.message}
-                label="Confirm Password"
+                label="确认密码"
               >
                 <Input
                   id="confirm_password"
                   {...register("confirm_password", {
                     validate: (value) =>
                       value === getValues().password ||
-                      "The passwords do not match",
+                      "两次输入的密码不一致",
                   })}
-                  placeholder="Password"
+                  placeholder="请再次输入密码"
                   type="password"
                 />
               </Field>
@@ -174,7 +174,7 @@ const EditUser = ({ user }: EditUserProps) => {
                       checked={field.value}
                       onCheckedChange={({ checked }) => field.onChange(checked)}
                     >
-                      Is superuser?
+                      超级管理员
                     </Checkbox>
                   </Field>
                 )}
@@ -188,7 +188,7 @@ const EditUser = ({ user }: EditUserProps) => {
                       checked={field.value}
                       onCheckedChange={({ checked }) => field.onChange(checked)}
                     >
-                      Is active?
+                      启用
                     </Checkbox>
                   </Field>
                 )}
@@ -203,11 +203,11 @@ const EditUser = ({ user }: EditUserProps) => {
                 colorPalette="gray"
                 disabled={isSubmitting}
               >
-                Cancel
+                取消
               </Button>
             </DialogActionTrigger>
             <Button variant="solid" type="submit" loading={isSubmitting}>
-              Save
+              保存
             </Button>
           </DialogFooter>
           <DialogCloseTrigger />

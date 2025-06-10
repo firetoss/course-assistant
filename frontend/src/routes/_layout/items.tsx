@@ -70,9 +70,9 @@ function ItemsTable() {
             <FiSearch />
           </EmptyState.Indicator>
           <VStack textAlign="center">
-            <EmptyState.Title>You don't have any items yet</EmptyState.Title>
+            <EmptyState.Title>你还没有任何项目</EmptyState.Title>
             <EmptyState.Description>
-              Add a new item to get started
+              请添加新项目开始使用
             </EmptyState.Description>
           </VStack>
         </EmptyState.Content>
@@ -86,9 +86,9 @@ function ItemsTable() {
         <Table.Header>
           <Table.Row>
             <Table.ColumnHeader w="sm">ID</Table.ColumnHeader>
-            <Table.ColumnHeader w="sm">Title</Table.ColumnHeader>
-            <Table.ColumnHeader w="sm">Description</Table.ColumnHeader>
-            <Table.ColumnHeader w="sm">Actions</Table.ColumnHeader>
+            <Table.ColumnHeader w="sm">标题</Table.ColumnHeader>
+            <Table.ColumnHeader w="sm">描述</Table.ColumnHeader>
+            <Table.ColumnHeader w="sm">操作</Table.ColumnHeader>
           </Table.Row>
         </Table.Header>
         <Table.Body>
@@ -105,7 +105,7 @@ function ItemsTable() {
                 truncate
                 maxW="30%"
               >
-                {item.description || "N/A"}
+                {item.description || "无"}
               </Table.Cell>
               <Table.Cell>
                 <ItemActionsMenu item={item} />
@@ -135,7 +135,7 @@ function Items() {
   return (
     <Container maxW="full">
       <Heading size="lg" pt={12}>
-        Items Management
+        项目管理
       </Heading>
       <AddItem />
       <ItemsTable />
