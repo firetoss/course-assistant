@@ -57,7 +57,7 @@ const EditItem = ({ item }: EditItemProps) => {
     mutationFn: (data: ItemUpdateForm) =>
       ItemsService.updateItem({ id: item.id, requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("Item updated successfully.")
+      showSuccessToast("项目更新成功。")
       reset()
       setIsOpen(false)
     },
@@ -83,29 +83,29 @@ const EditItem = ({ item }: EditItemProps) => {
       <DialogTrigger asChild>
         <Button variant="ghost">
           <FaExchangeAlt fontSize="16px" />
-          Edit Item
+          编辑项目
         </Button>
       </DialogTrigger>
       <DialogContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Edit Item</DialogTitle>
+            <DialogTitle>编辑项目</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            <Text mb={4}>Update the item details below.</Text>
+            <Text mb={4}>请在下方更新项目信息。</Text>
             <VStack gap={4}>
               <Field
                 required
                 invalid={!!errors.title}
                 errorText={errors.title?.message}
-                label="Title"
+                label="标题"
               >
                 <Input
                   id="title"
                   {...register("title", {
-                    required: "Title is required",
+                    required: "标题不能为空",
                   })}
-                  placeholder="Title"
+                  placeholder="请输入标题"
                   type="text"
                 />
               </Field>
@@ -113,12 +113,12 @@ const EditItem = ({ item }: EditItemProps) => {
               <Field
                 invalid={!!errors.description}
                 errorText={errors.description?.message}
-                label="Description"
+                label="描述"
               >
                 <Input
                   id="description"
                   {...register("description")}
-                  placeholder="Description"
+                  placeholder="请输入描述"
                   type="text"
                 />
               </Field>
@@ -133,11 +133,11 @@ const EditItem = ({ item }: EditItemProps) => {
                   colorPalette="gray"
                   disabled={isSubmitting}
                 >
-                  Cancel
+                  取消
                 </Button>
               </DialogActionTrigger>
               <Button variant="solid" type="submit" loading={isSubmitting}>
-                Save
+                保存
               </Button>
             </ButtonGroup>
           </DialogFooter>
