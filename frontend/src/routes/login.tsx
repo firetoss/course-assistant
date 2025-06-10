@@ -68,7 +68,7 @@ function Login() {
       >
         <Image
           src={Logo}
-          alt="FastAPI logo"
+          alt="课堂助手"
           height="auto"
           maxW="2xs"
           alignSelf="center"
@@ -76,16 +76,21 @@ function Login() {
         />
         <Field
           invalid={!!errors.username}
-          errorText={errors.username?.message || !!error}
+          errorText={errors.username?.message || (!!error && "登录失败，请检查邮箱和密码")}
         >
           <InputGroup w="100%" startElement={<FiMail />}>
             <Input
               id="username"
-              {...register("username", {
-                required: "Username is required",
-                pattern: emailPattern,
-              })}
-              placeholder="Email"
+              {
+                ...register("username", {
+                  required: "邮箱不能为空",
+                  pattern: {
+                    value: emailPattern.value,
+                    message: "请输入有效的邮箱地址",
+                  },
+                })
+              }
+              placeholder="邮箱"
               type="email"
             />
           </InputGroup>
@@ -94,19 +99,16 @@ function Login() {
           type="password"
           startElement={<FiLock />}
           {...register("password", passwordRules())}
-          placeholder="Password"
+          placeholder="密码"
           errors={errors}
         />
-        <RouterLink to="/recover-password" className="main-link">
-          Forgot Password?
-        </RouterLink>
         <Button variant="solid" type="submit" loading={isSubmitting} size="md">
-          Log In
+          登录
         </Button>
         <Text>
-          Don't have an account?{" "}
+          还没有账号？{" "}
           <RouterLink to="/signup" className="main-link">
-            Sign Up
+            注册
           </RouterLink>
         </Text>
       </Container>

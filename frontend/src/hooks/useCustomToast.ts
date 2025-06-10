@@ -5,7 +5,7 @@ import { toaster } from "@/components/ui/toaster"
 const useCustomToast = () => {
   const showSuccessToast = (description: string) => {
     toaster.create({
-      title: "Success!",
+      title: "操作成功！",
       description,
       type: "success",
     })
@@ -13,7 +13,7 @@ const useCustomToast = () => {
 
   const showErrorToast = (description: string) => {
     toaster.create({
-      title: "Something went wrong!",
+      title: "发生错误！",
       description,
       type: "error",
     })
