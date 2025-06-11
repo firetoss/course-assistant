@@ -1,7 +1,7 @@
 import { Box, Button, Flex, Text } from "@chakra-ui/react"
 import { Link } from "@tanstack/react-router"
 import { FaUserAstronaut } from "react-icons/fa"
-import { FiLogOut, FiUser } from "react-icons/fi"
+import { FiLogOut, FiUser, FiAnchor } from "react-icons/fi"
 
 import useAuth from "@/hooks/useAuth"
 import { MenuContent, MenuItem, MenuRoot, MenuTrigger } from "../ui/menu"
@@ -26,6 +26,19 @@ const UserMenu = () => {
           </MenuTrigger>
 
           <MenuContent>
+            <Link to="admin">
+              <MenuItem
+                closeOnSelect
+                value="user-admin"
+                gap={2}
+                py={2}
+                style={{ cursor: "pointer" }}
+              >
+                <FiAnchor fontSize="18px" />
+                <Box flex="1">用户管理</Box>
+              </MenuItem>
+            </Link>
+
             <Link to="settings">
               <MenuItem
                 closeOnSelect
