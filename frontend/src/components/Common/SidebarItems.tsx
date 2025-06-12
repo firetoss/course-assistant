@@ -1,65 +1,131 @@
-import { Combobox, Portal, Box, Text, useFilter, useListCollection } from "@chakra-ui/react"
+import {
+  Portal,
+  Box,
+  useListCollection,
+  Select,
+  Flex,
+  Text,
+} from "@chakra-ui/react"
+import { Link as RouterLink } from "@tanstack/react-router"
+import { useState } from "react"
 // import { useQueryClient } from "@tanstack/react-query"
-// import { Link as RouterLink } from "@tanstack/react-router"
 // import type { UserPublic } from "@/client"
 
-// const SidebarItems = ({ onClose }: SidebarItemsProps) => {
-const SidebarItems = () => {
+type exerciseType = "react" | "solid" | "vue" | "angular" | "svelte" | "preact"
+
+const exerciseTypeList: { label: string, value: exerciseType }[] = [
+  { label: "Python编程题", value: "react" },
+  { label: "基础知识单选题", value: "solid" },
+  { label: "数据库单选题", value: "vue" },
+  { label: "程序算法单选题", value: "angular" },
+  { label: "Python单选题", value: "svelte" },
+  { label: "流程图单选题", value: "preact" },
+]
+
+const exerciseConfigs = {
+  react: [
+    { name: "Python编程题", value: "react1", route: "/exercise/react1" },
+    { name: "Python编程题", value: "react2", route: "/exercise/react2" },
+  ],
+  solid: [
+    { name: "Python编程题", value: "solid1", route: "/exercise" },
+    { name: "Python编程题", value: "solid2", route: "/exercise" },
+  ],
+  vue: [
+    { name: "Python编程题", value: "vue1", route: "/exercise" },
+    { name: "Python编程题", value: "vue2", route: "/exercise" },
+  ],
+  angular: [
+    { name: "angular1", value: "angular1", route: "/exercise" },
+    { name: "angular2", value: "angular2", route: "/exercise" },
+  ],
+  svelte: [
+    { name: "svelte1", value: "svelte1", route: "/exercise" },
+    { name: "svelte2", value: "svelte2", route: "/exercise" },
+  ],
+  preact: [
+    { name: "preact1", value: "preact1", route: "/exercise" },
+    { name: "preact2", value: "preact2", route: "/exercise" },
+  ],
+}
+
+interface SidebarItemsProps {
+  onClose?: () => void
+}
+
+const SidebarItems = ({ onClose }: SidebarItemsProps) => {
   // const queryClient = useQueryClient()
-  // const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
-  const { contains } = useFilter({ sensitivity: "base" })
 
-  const frameworks = [
-    { label: "React", value: "react" },
-    { label: "Solid", value: "solid" },
-    { label: "Vue", value: "vue" },
-    { label: "Angular", value: "angular" },
-    { label: "Svelte", value: "svelte" },
-    { label: "Preact", value: "preact" },
-    { label: "Qwik", value: "qwik" },
-    { label: "Lit", value: "lit" },
-    { label: "Alpine.js", value: "alpinejs" },
-    { label: "Ember", value: "ember" },
-    { label: "Next.js", value: "nextjs" },
-  ]
-
-  const { collection, filter } = useListCollection({
-    initialItems: frameworks,
-    filter: contains,
+  const { collection } = useListCollection({
+    initialItems: exerciseTypeList,
   })
+
+  const [selectedExerciseType, setSelectedExerciseType] = useState<exerciseType[]>([])
+
+  const exerciseItems = Array.from(
+    new Set(
+      selectedExerciseType.flatMap(type => exerciseConfigs[type] ?? [])
+    )
+  )
 
   return (
     <>
       <Box>
-        <Text fontSize="md" px={2} py={2} fontWeight="bold">
-          测试题库列表
-        </Text>
-        <Combobox.Root
+        <Select.Root
           collection={collection}
-          onInputValueChange={(e) => filter(e.inputValue)}
-          width="320px"
+          size="sm"
+          width="290px"
+          value={selectedExerciseType}
+          onValueChange={(e) => setSelectedExerciseType(e.value as exerciseType[])}
         >
-          <Combobox.Control>
-            <Combobox.Input placeholder="搜索感兴趣的测试" />
-            <Combobox.IndicatorGroup>
-              <Combobox.ClearTrigger />
-              <Combobox.Trigger />
-            </Combobox.IndicatorGroup>
-          </Combobox.Control>
+          <Select.HiddenSelect />
+          <Select.Control>
+            <Select.Trigger>
+              <Select.ValueText placeholder="请选择题目类型" />
+            </Select.Trigger>
+            <Select.IndicatorGroup>
+              <Select.Indicator />
+            </Select.IndicatorGroup>
+          </Select.Control>
           <Portal>
-            <Combobox.Positioner>
-              <Combobox.Content>
-                <Combobox.Empty>未找到对应的测试</Combobox.Empty>
+            <Select.Positioner>
+              <Select.Content>
                 {collection.items.map((item) => (
-                  <Combobox.Item item={item} key={item.value}>
+                  <Select.Item item={item} key={item.value}>
                     {item.label}
-                    <Combobox.ItemIndicator />
-                  </Combobox.Item>
+                    <Select.ItemIndicator />
+                  </Select.Item>
                 ))}
-              </Combobox.Content>
-            </Combobox.Positioner>
+              </Select.Content>
+            </Select.Positioner>
           </Portal>
-        </Combobox.Root>
+        </Select.Root>
+        <Box mt={3}>
+          {/* <SimpleGrid columns={{ base: 1, sm: 1 }} > */}
+          {(
+            exerciseItems.map((item) => (
+              <RouterLink
+                key={item.value}
+                to={item.route}
+                onClick={onClose}>
+                <Flex
+                  key={item.value}
+                  gap={4}
+                  px={4}
+                  py={2}
+                  alignItems="center"
+                  fontSize="sm"
+                  _hover={{
+                    background: "gray.subtle",
+                  }}
+                >
+                  <Text ml={2}>{item.name}</Text>
+                </Flex>
+              </RouterLink>
+            ))
+          )}
+          {/* </SimpleGrid> */}
+        </Box>
       </Box>
     </>
   )
