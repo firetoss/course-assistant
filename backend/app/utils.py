@@ -12,6 +12,8 @@ from jwt.exceptions import InvalidTokenError
 from app.core import security
 from app.core.config import settings
 
+from docx.oxml.ns import qn
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -121,3 +123,8 @@ def verify_password_reset_token(token: str) -> str | None:
         return str(decoded_token["sub"])
     except InvalidTokenError:
         return None
+
+
+def extract_text_from_p(p_element):
+    """合并段落<w:p>元素所有文字节点"""
+    return "".join([t.text for t in p_element.iter(qn("w:t")) if t.text])

@@ -1,7 +1,8 @@
 import uuid
 
+from typing import Optional
 from pydantic import EmailStr
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship, SQLModel, JSON, Column, Text
 
 
 # Shared properties
@@ -90,6 +91,40 @@ class ItemPublic(ItemBase):
 class ItemsPublic(SQLModel):
     data: list[ItemPublic]
     count: int
+
+
+######### Exercise Start #########
+# Shared properties
+class ExerciseBase(SQLModel):
+    type: str = Field(min_length=1, max_length=20)
+    category: str = Field(min_length=1, max_length=20)
+    question: dict = Field(default={}, sa_column=Column(JSON))  # type: ignore
+    options: dict = Field(default={}, sa_column=Column(JSON))  # type: ignore
+    answer: str = Field(default="", sa_column=Text)
+
+
+class ExerciseCreate(ExerciseBase):
+    pass
+
+
+class ExerciseUpdate(ItemBase):
+    pass
+
+
+class Exercise(ExerciseBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+
+
+class ExercisePublic(ExerciseBase):
+    type: str
+
+
+class ExercisesPublic(SQLModel):
+    data: list[ItemPublic]
+    count: int
+
+
+######### Exercise End #########
 
 
 # Generic message
