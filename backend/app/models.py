@@ -98,8 +98,8 @@ class ItemsPublic(SQLModel):
 class ExerciseBase(SQLModel):
     type: str = Field(min_length=1, max_length=20)
     category: str = Field(min_length=1, max_length=20)
-    question: dict = Field(default={}, sa_column=Column(JSON))  # type: ignore
-    options: dict = Field(default={}, sa_column=Column(JSON))  # type: ignore
+    question: str = Field(default="", sa_column=Text)
+    options: str = Field(default="", sa_column=Text)
     answer: str = Field(default="", sa_column=Text)
 
 
@@ -107,7 +107,7 @@ class ExerciseCreate(ExerciseBase):
     pass
 
 
-class ExerciseUpdate(ItemBase):
+class ExerciseUpdate(ExerciseBase):
     pass
 
 
@@ -120,7 +120,7 @@ class ExercisePublic(ExerciseBase):
 
 
 class ExercisesPublic(SQLModel):
-    data: list[ItemPublic]
+    data: list[ExercisePublic]
     count: int
 
 

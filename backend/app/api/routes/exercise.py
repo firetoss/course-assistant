@@ -14,7 +14,7 @@ from app.models import (
     Message,
 )
 from app.utils import extract_text_from_p
-from app.core.exercise import ExerciesImporter
+from app.core import exercise as importer
 
 
 router = APIRouter(prefix="/exercises", tags=["exercises"])
@@ -25,7 +25,6 @@ def read_items(session: SessionDep) -> Any:
     """
     获取所有题目。
     """
-
     count_statement = select(func.count()).select_from(Exercise)
     count = session.exec(count_statement).one()
     statement = select(Exercise)
@@ -83,21 +82,6 @@ def delete_item(session: SessionDep, id: uuid.UUID) -> Message:
     """
     删除题目。
     """
-    item = session.get(Exercise, id)
-    if not item:
-        raise HTTPException(status_code=404, detail="未找到该题目")
-    session.delete(item)
-    session.commit()
-    return Message(message="题目删除成功")
-
-
-@router.get("/import")
-def delete_item(session: SessionDep) -> Message:
-    """
-    导入题目。
-    """
-    importer = ExerciesImporter()
-    exercies = importer.parse_doc("exercise-original/basic.docx")
     item = session.get(Exercise, id)
     if not item:
         raise HTTPException(status_code=404, detail="未找到该题目")
