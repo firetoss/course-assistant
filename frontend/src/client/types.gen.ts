@@ -9,6 +9,19 @@ export type Body_login_login_access_token = {
   client_secret?: string | null
 }
 
+export type ExercisePublic = {
+  type: string
+  category: string
+  question?: string
+  options?: string
+  answer?: string
+}
+
+export type ExercisesPublic = {
+  data: Array<ExercisePublic>
+  count: number
+}
+
 export type HTTPValidationError = {
   detail?: Array<ValidationError>
 }
@@ -106,6 +119,10 @@ export type ValidationError = {
   msg: string
   type: string
 }
+
+export type ExercisesReadItemsResponse = ExercisesPublic
+
+export type ImporterDocImportResponse = Message
 
 export type ItemsReadItemsData = {
   limit?: number

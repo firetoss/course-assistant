@@ -4,6 +4,8 @@ import type { CancelablePromise } from "./core/CancelablePromise"
 import { OpenAPI } from "./core/OpenAPI"
 import { request as __request } from "./core/request"
 import type {
+  ExercisesReadItemsResponse,
+  ImporterDocImportResponse,
   ItemsReadItemsData,
   ItemsReadItemsResponse,
   ItemsCreateItemData,
@@ -47,6 +49,36 @@ import type {
   UtilsTestEmailResponse,
   UtilsHealthCheckResponse,
 } from "./types.gen"
+
+export class ExercisesService {
+  /**
+   * Read Items
+   * 获取所有题目。
+   * @returns ExercisesPublic Successful Response
+   * @throws ApiError
+   */
+  public static readItems(): CancelablePromise<ExercisesReadItemsResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/exercises/",
+    })
+  }
+}
+
+export class ImporterService {
+  /**
+   * Doc Import
+   * 导入题目。
+   * @returns Message Successful Response
+   * @throws ApiError
+   */
+  public static docImport(): CancelablePromise<ImporterDocImportResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/importer/",
+    })
+  }
+}
 
 export class ItemsService {
   /**
@@ -172,7 +204,7 @@ export class ItemsService {
 export class LoginService {
   /**
    * Login Access Token
-   * OAuth2 compatible token login, get an access token for future requests
+   * OAuth2 兼容的令牌登录，获取用于后续请求的访问令牌
    * @param data The data for the request.
    * @param data.formData
    * @returns Token Successful Response
@@ -194,7 +226,7 @@ export class LoginService {
 
   /**
    * Test Token
-   * Test access token
+   * 测试访问令牌
    * @returns UserPublic Successful Response
    * @throws ApiError
    */
@@ -207,7 +239,7 @@ export class LoginService {
 
   /**
    * Recover Password
-   * Password Recovery
+   * 找回密码
    * @param data The data for the request.
    * @param data.email
    * @returns Message Successful Response
@@ -230,7 +262,7 @@ export class LoginService {
 
   /**
    * Reset Password
-   * Reset password
+   * 重置密码
    * @param data The data for the request.
    * @param data.requestBody
    * @returns Message Successful Response
@@ -252,7 +284,7 @@ export class LoginService {
 
   /**
    * Recover Password Html Content
-   * HTML Content for Password Recovery
+   * 获取找回密码邮件 HTML 内容
    * @param data The data for the request.
    * @param data.email
    * @returns string Successful Response
