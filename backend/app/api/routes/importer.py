@@ -33,8 +33,8 @@ def doc_import(session: SessionDep) -> Message:
         exercie_in.id = uuid.uuid4()
         exercie_in.type = exercise_type
         exercie_in.category = "single"
-        exercie_in.question = json.dumps(item["question"], ensure_ascii=False)
-        exercie_in.options = "" if exercise_type == "code-python" else json.dumps(item["options"], ensure_ascii=False)
+        exercie_in.question = json.dumps(item["question"])
+        exercie_in.options = "[]" if exercise_type == "code-python" else json.dumps(item["options"], ensure_ascii=False)
         exercie_in.answer = json.dumps(item["answer"])
         exercie = Exercise.model_validate(exercie_in)
         session.add(exercie)
