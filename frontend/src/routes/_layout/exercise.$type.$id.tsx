@@ -1,38 +1,46 @@
 import { useExercisesQuery, ExerciseTypes } from '@/hooks/useExercisesQuery';
-import { Box, Flex, Button, Text, VStack, Separator, Image } from '@chakra-ui/react';
-import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useState } from 'react';
+import { Box, Flex, Button, Text, VStack, Separator, Image, HStack, Alert, Link, Icon } from '@chakra-ui/react';
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useEffect, useRef, useState } from 'react';
 import {
   useColorModeValue,
 } from "@/components/ui/color-mode"
+import { AiOutlineQuestionCircle } from "react-icons/ai";
+import useCustomToast from "@/hooks/useCustomToast"
 import AceEditor from "react-ace"
 import 'ace-builds/src-noconflict/mode-python';
 import 'ace-builds/src-noconflict/snippets/python';
 import 'ace-builds/src-noconflict/ext-language_tools';
+import { PyRunner, PyRunnerHandle } from "../../components/PyRunner";
 
 export const Route = createFileRoute('/_layout/exercise/$type/$id')({
   component: ExerciseDetail,
 });
 
 function ExerciseDetail() {
-  const [selected, setSelected] = useState<number | null>(null);
+  const [selected, setSelected] = useState<number | null>(null)
   const [_, setShowJudge] = useState(false);
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [code, setCode] = useState<string>('')
-  const clearAll = () => {
-    setSelected(null)
-    setShowJudge(false)
-    setIsCorrect(null)
-  }
-
-  const { type, id } = Route.useParams();
+  const getCacheKey = (type: string, exerciseId: string) => `ex_${type}_${exerciseId}`
+  const { showSuccessToast } = useCustomToast()
+  const pyRef = useRef<PyRunnerHandle>(null);
+  const { type, id } = Route.useParams()
+  const idx = Number(id)
 
   useEffect(() => {
-    setIdx(Number(id));
-    clearAll()
+    handleClear()
+    // 代码缓存
+    const cacheKey = getCacheKey(type, id!);
+    const cachedCode = localStorage.getItem(cacheKey);
+    if (cachedCode !== null) {
+      setCode(cachedCode);
+    } else {
+      setCode("");
+    }
   }, [id]);
 
-  const [idx, setIdx] = useState(Number(id));
+  const navigate = useNavigate();
 
   const { data: exercises } = useExercisesQuery()
 
@@ -41,32 +49,81 @@ function ExerciseDetail() {
   }
 
   const exercise = exercises[type as ExerciseTypes][idx]
-
   const optionLabels = ["A", "B", "C", "D"]
-
   const total = exercises[type as ExerciseTypes].length;
   const canPrev = idx > 0;
   const canNext = idx < total - 1;
 
   const goPrev = () => {
-    if (canPrev) {
-      setIdx(idx - 1);
-      clearAll()
-    }
+    if (idx > 0) navigate({ to: `/exercise/${type}/${idx - 1}` })
   }
   const goNext = () => {
-    if (canNext) {
-      if (!canNext) return;
-      setIdx(idx + 1);
-      clearAll()
-    }
+    if (idx < total - 1) navigate({ to: `/exercise/${type}/${idx + 1}` })
   }
+
+  // 保存
+  const handleSave = () => {
+    const cacheKey = getCacheKey(type, id);
+    localStorage.setItem(cacheKey, code);
+    showSuccessToast("代码已保存！");
+  };
+
+  const [output, setOutput] = useState<string>('')
+  const [isSuccess, setIsSuccess] = useState<Boolean | null>(null)
+  // const [analysisVisible, setAnalysisVisible] = useState<boolean>(false);
+  const handleRun = async () => {
+    if (pyRef.current) {
+      const result = await pyRef.current.runCode(code);
+      console.log(result)
+      setIsSuccess(result.success)
+      setOutput(result.message);
+    }
+  };
 
   const selectOptions = (i: number) => {
     const selected = optionLabels[i]
     setIsCorrect(selected === Array.from(exercise.answer).join(""))
     setSelected(i)
   }
+
+  const removeCodeCache = () => {
+    setCode("")
+    const cacheKey = getCacheKey(type, id);
+    localStorage.removeItem(cacheKey);
+    showSuccessToast("你的代码已清空！");
+  }
+
+  const handleClear = () => {
+    setSelected(null)
+    setShowJudge(false)
+    setIsCorrect(null)
+    setCode("")
+    setIsSuccess(null)
+  }
+
+  // const handleShowAnalysis = () => setAnalysisVisible(v => !v);
+
+  const [parsing, setParsing] = useState(false)
+  const [explanation, setExplanation] = useState("")
+  const [error, setError] = useState("");
+
+  const askLLM = async () => {
+    setParsing(true);
+    setError("");
+    try {
+      // 调用大模型API（替换成实际API请求）
+      await new Promise(res => setTimeout(res, 1200));
+      setExplanation(
+        "这是AI大模型提供的解析答案示例。实际效果可根据API响应自定义。"
+      );
+    } catch (e) {
+      setError("获取解析失败，请稍后重试。");
+    } finally {
+      setParsing(false);
+    }
+  }
+
+  const actualExplanation = explanation || ""
 
   return (
     <>
@@ -235,7 +292,7 @@ function ExerciseDetail() {
                 </VStack>
               ) : (
                 <Box mt={6} p={4} bg="gray.50" borderRadius="md">
-                  <Text fontWeight="bold" color="teal.600" mb={2}>
+                  <Text fontSize={16} fontWeight="bold" color="teal.600" mb={2}>
                     请在下方输入你的代码：
                   </Text>
                   <AceEditor
@@ -258,6 +315,7 @@ function ExerciseDetail() {
                       $blockScrolling: true,
                     }}
                   />
+                  <PyRunner ref={pyRef} />
                 </Box>
               )}
               {/* 底部选择与翻页 */}
@@ -282,6 +340,23 @@ function ExerciseDetail() {
                 >
                   上一题
                 </Button>
+                {exercise.category === "code" ? (
+                  <HStack mt={0}>
+                    <Button colorScheme="teal" onClick={handleSave}>
+                      保存
+                    </Button>
+                    <Button colorScheme="teal" onClick={handleRun}>
+                      运行
+                    </Button>
+                    <Button colorScheme="teal" onClick={removeCodeCache}>
+                      清空
+                    </Button>
+                    {/* <Button colorScheme="teal" onClick={handleShowAnalysis}>
+                      解析
+                    </Button> */}
+                  </HStack>
+                ) : (<></>)}
+
                 <Button
                   onClick={goNext}
                   disabled={!canNext}
@@ -300,54 +375,107 @@ function ExerciseDetail() {
             </Box>
 
             {/* 右侧答题反馈与解析 */}
-            {exercise.category !== "code" ? (
+            <Box
+              flex={{ base: "1 1 100%", md: "0 0 40%" }}
+              maxW={{ base: "100%", md: "40%" }}
+              pl={{ base: 0, md: 8 }}
+              pt={{ base: 0, md: 2 }}
+              minH="320px"
+              overflowY={"auto"}
+            >
+              {/* 判断结果 */}
+              {exercise.category !== "code" ? (
+                <>
+                  <Text
+                    fontWeight="bold"
+                    fontSize="2xl"
+                    color={isCorrect == null ? "gray.400" : isCorrect ? "green.500" : "red.500"}
+                    mb={3}
+                  >
+                    {isCorrect == null ? "" : (isCorrect ? "√ 回答正确" : "× 回答错误")}
+                  </Text>
+
+                  {isCorrect !== null && (
+                    <Text
+                      fontWeight="bold"
+                      fontSize="2xl"
+                      color="gray.400"
+                      mb={3}
+                    >
+                      您的选择：{optionLabels[selected ?? -1]}
+                    </Text>
+                  )}
+
+                  {isCorrect !== null && isCorrect && (
+                    <Text
+                      fontWeight="bold"
+                      fontSize="2xl"
+                      color={"gray.400"}
+                      mb={3}
+                    >
+                      正确答案：{Array.from(exercise.answer).join('')}
+                    </Text>
+                  )}
+                </>
+              ) : (
+                <>
+                  {isSuccess === null ? null : (
+                    <Alert.Root variant={"surface"} mb={3} colorPalette={isSuccess ? "teal" : "red"}>
+                      <Alert.Indicator />
+                      <Alert.Content>
+                        <Alert.Title>{isSuccess ? "运行成功" : "运行失败"}</Alert.Title>
+                        <Alert.Description>
+                          {isSuccess ? `输出结果：${output}` : output}
+                        </Alert.Description>
+                      </Alert.Content>
+                    </Alert.Root>
+                  )}
+                </>
+              )}
+              {/* 解析 */}
               <Box
-                flex={{ base: "1 1 100%", md: "0 0 40%" }}
-                maxW={{ base: "100%", md: "40%" }}
-                pl={{ base: 0, md: 8 }}
-                pt={{ base: 0, md: 2 }}
-                minH="320px"
-                overflowY={"auto"}
+                mt={6}
+                bg="white"
+                borderRadius="lg"
+                p={7}
+                boxShadow="md"
+                border="1.5px solid"
+                borderColor={"gray.200"}
+                minH="120px"
+                userSelect="text"
+                position="relative"
               >
-                {/* 判断结果 */}
-                <Text
-                  fontWeight="bold"
-                  fontSize="2xl"
-                  color={isCorrect == null ? "gray.400" : isCorrect ? "green.500" : "red.500"}
-                  mb={3}
-                >
-                  {isCorrect == null ? "" : (isCorrect ? "√ 回答正确" : "× 回答错误")}
-                </Text>
-
-                {isCorrect !== null && (
-                  <Text
-                    fontWeight="bold"
-                    fontSize="2xl"
-                    color="gray.400"
-                    mb={3}
-                  >
-                    您的选择：{optionLabels[selected ?? -1]}
+                {/* 标题行 */}
+                <HStack mb={3}>
+                  <Text fontSize="xl" fontWeight="bold" color={"gray.800"} letterSpacing="0.5px">
+                    题目解析
                   </Text>
-                )}
-
-                {isCorrect !== null && isCorrect && (
+                  <HStack ml="auto">
+                    <Icon as={AiOutlineQuestionCircle} color={"teal.500"} boxSize={5} />
+                    <Link
+                      color={"teal.500"}
+                      fontWeight="medium"
+                      fontSize="md"
+                      _hover={{ color: "teal.600", textDecoration: "underline" }}
+                      cursor={parsing ? "not-allowed" : "pointer"}
+                      onClick={askLLM}
+                    >
+                      问问大模型
+                    </Link>
+                  </HStack>
+                </HStack>
+                <VStack align="start" pt={1}>
                   <Text
-                    fontWeight="bold"
-                    fontSize="2xl"
-                    color={"gray.400"}
-                    mb={3}
+                    fontSize="md"
+                    color={explanation ? "gray.800" : "gray.500"}
+                    whiteSpace="pre-wrap"
                   >
-                    正确答案：{Array.from(exercise.answer).join('')}
+                    暂无解析，可点击右上角“问问大模型”试试~
+                    {/* {explanation || placeholder} */}
                   </Text>
-                )}
-
-                {/* 解析 */}
-                <Box mt={isCorrect == null ? 0 : 6} bg={useColorModeValue("gray.50", "gray.800")} borderRadius="lg" p={5}>
-                  <Text fontSize="lg" fontWeight="bold" mb={2}>题目解析</Text>
-                  <Text fontSize="md" color="gray.700">{"暂无解析"}</Text>
-                </Box>
+                </VStack>
               </Box>
-            ): (<></>)}
+            </Box>
           </Flex>
         </Box>
       </Flex>
