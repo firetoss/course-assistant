@@ -3,7 +3,7 @@ import { ExercisesPublic, ExercisesService } from "@/client"
 
 const exerciseTypes = ["algo", "code-python", "basic", "sql"] as const;
 
-type ExerciseTypes = typeof exerciseTypes[number]
+export type ExerciseTypes = typeof exerciseTypes[number]
 
 interface Exercise {
     category: string
@@ -23,7 +23,7 @@ const processExercises = (rawList: ExercisesPublic): Exercises => {
         return acc;
     }, {} as Exercises);
 
-    rawList.data.forEach((item, idx) => {
+    rawList.data.forEach((item) => {
         const type = item.type.trim() as ExerciseTypes;
         try {
             // 如果 type 是合法的类型值
@@ -33,7 +33,7 @@ const processExercises = (rawList: ExercisesPublic): Exercises => {
                     question: JSON.parse(item.question ?? "[]".trim()),
                     options: JSON.parse(item.options ?? "[]".trim()),
                     answer: JSON.parse(item.answer ?? "[]".trim()).join(""),
-                    route: `/exercise/${type}/${idx}`,
+                    route: `/exercise/${type}`,
                 };
                 initialData[type].push(exercise);
             }
@@ -44,6 +44,12 @@ const processExercises = (rawList: ExercisesPublic): Exercises => {
             console.log(error)
         }
     });
+
+    Object.entries(initialData).forEach(([_, exercises]) => {
+        exercises.forEach((exercise, idx) => {
+            exercise.route = exercise.route + "/" + idx
+        })
+    })
 
     return initialData;
 }

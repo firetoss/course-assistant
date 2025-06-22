@@ -6,7 +6,6 @@ import UserMenu from "./UserMenu"
 
 function Navbar() {
   const display = useBreakpointValue({ base: "none", md: "flex" })
-  console.log(display)
   return (
     <Flex
       display={display}

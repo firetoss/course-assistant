@@ -25,6 +25,8 @@ import type {
   LoginResetPasswordResponse,
   LoginRecoverPasswordHtmlContentData,
   LoginRecoverPasswordHtmlContentResponse,
+  PicReadItemsData,
+  PicReadItemsResponse,
   PrivateCreateUserData,
   PrivateCreateUserResponse,
   UsersReadUsersData,
@@ -298,6 +300,31 @@ export class LoginService {
       url: "/api/v1/password-recovery-html-content/{email}",
       path: {
         email: data.email,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+}
+
+export class PicService {
+  /**
+   * Read Items
+   * 获取所有题目。
+   * @param data The data for the request.
+   * @param data.filename
+   * @returns unknown Successful Response
+   * @throws ApiError
+   */
+  public static readItems(
+    data: PicReadItemsData,
+  ): CancelablePromise<PicReadItemsResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/pic/{filename}",
+      path: {
+        filename: data.filename,
       },
       errors: {
         422: "Validation Error",

@@ -182,6 +182,12 @@ export type LoginRecoverPasswordHtmlContentData = {
 
 export type LoginRecoverPasswordHtmlContentResponse = string
 
+export type PicReadItemsData = {
+  filename: string
+}
+
+export type PicReadItemsResponse = unknown
+
 export type PrivateCreateUserData = {
   requestBody: PrivateUserCreate
 }
