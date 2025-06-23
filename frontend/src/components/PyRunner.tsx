@@ -67,6 +67,7 @@ export const PyRunner = forwardRef<PyRunnerHandle, {}>((props, ref) => {
 
             try {
                 await pyodide.runPythonAsync(code);
+                console.log(output)
                 return {
                     success: true,
                     message: output.trim() || "运行成功"

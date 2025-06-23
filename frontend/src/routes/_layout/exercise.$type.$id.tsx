@@ -1,17 +1,19 @@
-import { useExercisesQuery, ExerciseTypes } from '@/hooks/useExercisesQuery';
-import { Box, Flex, Button, Text, VStack, Separator, Image, HStack, Alert, Link, Icon } from '@chakra-ui/react';
+import { useExercisesQuery, ExerciseTypes } from '@/hooks/useExercisesQuery'
+import { Box, Flex, Button, Text, VStack, Separator, Image, HStack, Alert, Link, Icon, Center, Spinner } from '@chakra-ui/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react'
 import {
   useColorModeValue,
 } from "@/components/ui/color-mode"
-import { AiOutlineQuestionCircle } from "react-icons/ai";
+import { AiOutlineQuestionCircle } from "react-icons/ai"
 import useCustomToast from "@/hooks/useCustomToast"
 import AceEditor from "react-ace"
-import 'ace-builds/src-noconflict/mode-python';
-import 'ace-builds/src-noconflict/snippets/python';
-import 'ace-builds/src-noconflict/ext-language_tools';
-import { PyRunner, PyRunnerHandle } from "../../components/PyRunner";
+import 'ace-builds/src-noconflict/mode-python'
+import 'ace-builds/src-noconflict/snippets/python'
+import 'ace-builds/src-noconflict/ext-language_tools'
+import { PyRunner, PyRunnerHandle } from "../../components/PyRunner"
+import { streamFetch, MessageContent } from '../../utils/streamFetch'
+import ReactMarkdown from 'react-markdown'
 
 export const Route = createFileRoute('/_layout/exercise/$type/$id')({
   component: ExerciseDetail,
@@ -70,11 +72,10 @@ function ExerciseDetail() {
 
   const [output, setOutput] = useState<string>('')
   const [isSuccess, setIsSuccess] = useState<Boolean | null>(null)
-  // const [analysisVisible, setAnalysisVisible] = useState<boolean>(false);
+
   const handleRun = async () => {
     if (pyRef.current) {
       const result = await pyRef.current.runCode(code);
-      console.log(result)
       setIsSuccess(result.success)
       setOutput(result.message);
     }
@@ -99,31 +100,76 @@ function ExerciseDetail() {
     setIsCorrect(null)
     setCode("")
     setIsSuccess(null)
+    handleStop()
+    setParsing(false)
+    setExplanation("")
   }
-
-  // const handleShowAnalysis = () => setAnalysisVisible(v => !v);
 
   const [parsing, setParsing] = useState(false)
   const [explanation, setExplanation] = useState("")
-  const [error, setError] = useState("");
 
-  const askLLM = async () => {
+  const controllerRef = useRef<AbortController | null>(null);
+
+  function askLLM() {
     setParsing(true);
-    setError("");
-    try {
-      // 调用大模型API（替换成实际API请求）
-      await new Promise(res => setTimeout(res, 1200));
-      setExplanation(
-        "这是AI大模型提供的解析答案示例。实际效果可根据API响应自定义。"
-      );
-    } catch (e) {
-      setError("获取解析失败，请稍后重试。");
-    } finally {
-      setParsing(false);
-    }
+    setExplanation("");
+    controllerRef.current = new AbortController();
+
+    const sysPrompt = `你是一名有丰富经验的高中计算机教师。请阅读我提供的试题内容和/或程序运行时遇到的错误提示，按照以下格式进行详细解读：
+* 试题解读：简明扼要地分析试题考点、解题思路和需要注意的知识点。
+请选择准确、具象的表达方式，避免过于抽象的专业术语。`;
+
+    const usrPrompt = `
+##题目##
+${exercise.question.join("\n")}
+##题目类别##
+${exercise.category}
+##注意##
+* 忽略题目中$$...$$部分的内容
+* 忽略图片内容
+* 题目类别中single是单选题，python代表是python编程题，如果是python编程题，需要给出题目python相关知识点提示
+`;
+
+    const content: MessageContent[] = [
+      { type: "text", text: usrPrompt },
+    ];
+
+    const messages = [
+      { role: "system", content: sysPrompt },
+      { role: "user", content: content },
+    ];
+
+    streamFetch({
+      messages,
+      signal: controllerRef.current.signal,
+      onMessage: (data) => {
+        // 按流式接口格式获取每一段内容，追加渲染
+        let text = '';
+        if (data.choices && data.choices[0]) {
+          text = data.choices[0].delta?.content || data.choices[0].message?.content || '';
+        } else if (data.data) {
+          text = data.data;
+        } else if (data.content) {
+          text = data.content;
+        }
+
+        if (text) setExplanation((prev) => prev + text);
+      },
+      onError: (err) => {
+        setExplanation('[出错] ' + (err.message || String(err)));
+        setParsing(false);
+      },
+      onFinish: () => {
+        setParsing(false);
+      },
+    });
   }
 
-  const actualExplanation = explanation || ""
+  function handleStop() {
+    setParsing(false);
+    setExplanation("")
+    if (controllerRef.current) controllerRef.current.abort();
+  }
 
   return (
     <>
@@ -458,21 +504,37 @@ function ExerciseDetail() {
                       fontSize="md"
                       _hover={{ color: "teal.600", textDecoration: "underline" }}
                       cursor={parsing ? "not-allowed" : "pointer"}
-                      onClick={askLLM}
+                      onClick={parsing ? handleStop : askLLM}
                     >
                       问问大模型
                     </Link>
                   </HStack>
                 </HStack>
                 <VStack align="start" pt={1}>
-                  <Text
-                    fontSize="md"
-                    color={explanation ? "gray.800" : "gray.500"}
-                    whiteSpace="pre-wrap"
-                  >
-                    暂无解析，可点击右上角“问问大模型”试试~
-                    {/* {explanation || placeholder} */}
-                  </Text>
+                  {parsing && explanation === '' ? (
+                    <Center w="100%" minH="60px">
+                      <Spinner size="lg" color="blue.400" />
+                      <Text ml={4} color="gray.500">正在加载，请稍后…</Text>
+                    </Center>
+                  ) : explanation ? (
+                    <Box
+                      fontSize="md"
+                      color="gray.800"
+                      fontFamily="SFMono-Regular,Menlo,Monaco,Consolas,monospace"
+                    >
+                      <ReactMarkdown>
+                        {explanation}
+                      </ReactMarkdown>
+                    </Box>
+                  ) : (
+                    <Text
+                      fontSize="md"
+                      color="gray.500"
+                      whiteSpace="pre-wrap"
+                    >
+                      暂无解析，可点击右上角“问问大模型”试试~
+                    </Text>
+                  )}
                 </VStack>
               </Box>
             </Box>
