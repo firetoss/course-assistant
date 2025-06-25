@@ -1,4 +1,4 @@
-import React, {
+import {
     useEffect,
     useImperativeHandle,
     useRef,
@@ -20,7 +20,7 @@ export interface PyRunnerHandle {
     runCode: (code: string) => Promise<{ success: boolean; message: string }>;
 }
 
-export const PyRunner = forwardRef<PyRunnerHandle, {}>((props, ref) => {
+export const PyRunner = forwardRef<PyRunnerHandle, {}>((_, ref) => {
     const [loading, setLoading] = useState(true);
     const pyodideRef = useRef<any>(null);
 
@@ -67,7 +67,6 @@ export const PyRunner = forwardRef<PyRunnerHandle, {}>((props, ref) => {
 
             try {
                 await pyodide.runPythonAsync(code);
-                console.log(output)
                 return {
                     success: true,
                     message: output.trim() || "运行成功"
