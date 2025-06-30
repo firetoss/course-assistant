@@ -28,8 +28,31 @@ function ExerciseDetail() {
   const [code, setCode] = useState<string>('')
   const getCacheKey = (type: string, exerciseId: string) => `ex_${type}_${exerciseId}`
   const { showSuccessToast } = useCustomToast()
+  const [explanation, setExplanation] = useState("")
+  const controllerRef = useRef<AbortController | null>(null);
+  const pyRef = useRef<PyRunnerHandle>(null);
+  const [output, setOutput] = useState<OutItem[]>([]);
+  const [waitingInput, setWaitingInput] = useState<null | {
+    prompt: string,
+    respond: (v: string) => void
+  }>(null);
+  const [isSuccess, setIsSuccess] = useState<boolean | null>(null);
   const { type, id } = Route.useParams()
   const idx = Number(id)
+
+  const [parsing, setParsing] = useState(false)
+
+  const handleClear = () => {
+    setSelected(null)
+    setShowJudge(false)
+    setIsCorrect(null)
+    setCode("")
+    handleStop()
+    setParsing(false)
+    setExplanation("")
+    setOutput([])
+    setIsSuccess(null)
+  }
 
   useEffect(() => {
     handleClear()
@@ -63,14 +86,6 @@ function ExerciseDetail() {
   const goNext = () => {
     if (idx < total - 1) navigate({ to: `/exercise/${type}/${idx + 1}` })
   }
-
-  const pyRef = useRef<PyRunnerHandle>(null);
-  const [output, setOutput] = useState<OutItem[]>([]);
-  const [waitingInput, setWaitingInput] = useState<null | {
-    prompt: string,
-    respond: (v: string) => void
-  }>(null);
-  const [isSuccess, setIsSuccess] = useState<boolean | null>(null);
 
   const handleOutput = (text: string, type: "stdout" | "stderr" | "input") => {
     setOutput(o => [...o, { text, type }]);
@@ -112,23 +127,6 @@ function ExerciseDetail() {
     localStorage.removeItem(cacheKey);
     showSuccessToast("你的代码已清空！");
   }
-
-  const handleClear = () => {
-    setSelected(null)
-    setShowJudge(false)
-    setIsCorrect(null)
-    setCode("")
-    handleStop()
-    setParsing(false)
-    setExplanation("")
-    setOutput([])
-    setIsSuccess(null)
-  }
-
-  const [parsing, setParsing] = useState(false)
-  const [explanation, setExplanation] = useState("")
-
-  const controllerRef = useRef<AbortController | null>(null);
 
   function askLLM() {
     setParsing(true);
