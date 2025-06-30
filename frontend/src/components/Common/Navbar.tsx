@@ -21,9 +21,9 @@ function Navbar() {
       <Link to="/">
         <Image src={Logo} alt="Logo" maxW="3xs" p={2} />
       </Link>
-      <Flex gap={2} alignItems="center">
+      {/* <Flex gap={2} alignItems="center">
         <UserMenu />
-      </Flex>
+      </Flex> */}
     </Flex>
   )
 }
