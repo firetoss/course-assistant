@@ -1,5 +1,5 @@
 import { useExercisesQuery, ExerciseTypes } from '@/hooks/useExercisesQuery'
-import { Box, Flex, Button, Text, VStack, Separator, Image, HStack, Alert, Link, Icon, Center, Spinner } from '@chakra-ui/react'
+import { Box, Flex, Button, Text, VStack, Separator, Image, HStack, Alert, Link, Icon, Center, Spinner, Input } from '@chakra-ui/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import {
@@ -11,13 +11,15 @@ import AceEditor from "react-ace"
 import 'ace-builds/src-noconflict/mode-python'
 import 'ace-builds/src-noconflict/snippets/python'
 import 'ace-builds/src-noconflict/ext-language_tools'
-import { PyRunner, PyRunnerHandle } from "../../components/PyRunner"
+import { PyRunner, PyRunnerHandle } from "../../components/PyRunner";
 import { streamFetch, MessageContent } from '../../utils/streamFetch'
 import ReactMarkdown from 'react-markdown'
 
 export const Route = createFileRoute('/_layout/exercise/$type/$id')({
   component: ExerciseDetail,
 });
+
+type OutItem = { text: string; type: "stdout" | "stderr" | "input" };
 
 function ExerciseDetail() {
   const [selected, setSelected] = useState<number | null>(null)
@@ -26,7 +28,6 @@ function ExerciseDetail() {
   const [code, setCode] = useState<string>('')
   const getCacheKey = (type: string, exerciseId: string) => `ex_${type}_${exerciseId}`
   const { showSuccessToast } = useCustomToast()
-  const pyRef = useRef<PyRunnerHandle>(null);
   const { type, id } = Route.useParams()
   const idx = Number(id)
 
@@ -63,22 +64,40 @@ function ExerciseDetail() {
     if (idx < total - 1) navigate({ to: `/exercise/${type}/${idx + 1}` })
   }
 
+  const pyRef = useRef<PyRunnerHandle>(null);
+  const [output, setOutput] = useState<OutItem[]>([]);
+  const [waitingInput, setWaitingInput] = useState<null | {
+    prompt: string,
+    respond: (v: string) => void
+  }>(null);
+  const [isSuccess, setIsSuccess] = useState<boolean | null>(null);
+
+  const handleOutput = (text: string, type: "stdout" | "stderr" | "input") => {
+    setOutput(o => [...o, { text, type }]);
+  };
+
+  // 处理 input 请求
+  const handleInputRequest = (prompt: string, respond: (v: string) => void) => {
+    setWaitingInput({ prompt, respond });
+  };
+
+  const handleRun = async () => {
+    setOutput([]);
+    setIsSuccess(null);
+    const res = await pyRef.current?.runCode(code);
+    setIsSuccess(res?.success ?? false);
+  };
+
+  const finalStr = output
+    .filter(o => o.type === "stdout" || o.type === "stderr")
+    .map(o => o.text)
+    .join(""); // 或 '\n' 看你喜欢
+
   // 保存
   const handleSave = () => {
     const cacheKey = getCacheKey(type, id);
     localStorage.setItem(cacheKey, code);
     showSuccessToast("代码已保存！");
-  };
-
-  const [output, setOutput] = useState<string>('')
-  const [isSuccess, setIsSuccess] = useState<Boolean | null>(null)
-
-  const handleRun = async () => {
-    if (pyRef.current) {
-      const result = await pyRef.current.runCode(code);
-      setIsSuccess(result.success)
-      setOutput(result.message);
-    }
   };
 
   const selectOptions = (i: number) => {
@@ -99,10 +118,11 @@ function ExerciseDetail() {
     setShowJudge(false)
     setIsCorrect(null)
     setCode("")
-    setIsSuccess(null)
     handleStop()
     setParsing(false)
     setExplanation("")
+    setOutput([])
+    setIsSuccess(null)
   }
 
   const [parsing, setParsing] = useState(false)
@@ -361,7 +381,30 @@ ${exercise.category}
                       $blockScrolling: true,
                     }}
                   />
-                  <PyRunner ref={pyRef} />
+                  <PyRunner
+                    ref={pyRef}
+                    onOutput={handleOutput}
+                    onInputRequest={handleInputRequest}
+                  />
+                  {waitingInput && (
+                    <HStack>
+                      <Text fontWeight="bold" color="teal.600">
+                        {waitingInput.prompt}
+                      </Text>
+                      <Input
+                        placeholder="请输入…"
+                        autoFocus
+                        onKeyDown={e => {
+                          if (e.key === "Enter") {
+                            waitingInput.respond(e.currentTarget.value);
+                            setWaitingInput(null);
+                          }
+                        }}
+                        bg="white"
+                        maxW="240px"
+                      />
+                    </HStack>
+                  )}
                 </Box>
               )}
               {/* 底部选择与翻页 */}
@@ -471,7 +514,7 @@ ${exercise.category}
                       <Alert.Content>
                         <Alert.Title>{isSuccess ? "运行成功" : "运行失败"}</Alert.Title>
                         <Alert.Description>
-                          {isSuccess ? `输出结果：${output}` : output}
+                          {isSuccess ? `输出结果：${finalStr}` : finalStr}
                         </Alert.Description>
                       </Alert.Content>
                     </Alert.Root>
